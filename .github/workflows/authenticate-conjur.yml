@@ -25,8 +25,7 @@ jobs:
       id: authenticate
       run: |
         # Run the curl command to authenticate to Conjur and get the token
-        response=$(curl --silent --header "Accept-Encoding: base64" \
-          --data "2x4wdtxfrfepcxf2r533cwh7mb18hpr6pbfasgb2ptm78jxpnd9" \
+        response=$(curl --header "Accept-Encoding: base64" --data 3hyc3sp22ayr0y1qpxsn3237wvg3224bz153jr30fm22bd6p41cb9tx5 \
           --write-out "%{http_code}" \
           --output response.txt \
           https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Feyatest1/authenticate)
