@@ -77,3 +77,4 @@ jobs:
     - name: Display the Authentication Token
       run: |
         echo "Successfully authenticated. Token: ${{ env.auth_token }}"
+        echo "Done"
