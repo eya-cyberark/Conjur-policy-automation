@@ -21,17 +21,23 @@ jobs:
     - name: Authenticate to Conjur and Get Token
       id: authenticate
       run: |
-        # Run the curl command and print the full response
-        response=$(curl --header "Accept-Encoding: base64" \
+        # Print the API Key (for debugging) to ensure it's being passed correctly (only for debugging, not recommended in production)
+        echo "Using API Key: ${{ secrets.CONJUR_API_KEY }}"
+        
+        # Run the curl command with verbose output for debugging
+        response=$(curl --silent --header "Accept-Encoding: base64" \
           --data "${{ secrets.CONJUR_API_KEY }}" \
+          --write-out "%{http_code}" \
+          --output response.txt \
           https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Feyatest1/authenticate)
 
-        # Debugging: Print the response to see if we're getting the expected token
-        echo "Response: $response"
+        # Debugging: Print the response and HTTP status code
+        echo "Response: $(cat response.txt)"
+        echo "HTTP Status Code: $response"
 
-        # Capture the token if the response is not empty
-        if [ -n "$response" ]; then
-          echo "auth_token=$response" >> $GITHUB_ENV
+        # Check if token is received and save to environment variable
+        if [ -n "$(cat response.txt)" ]; then
+          echo "auth_token=$(cat response.txt)" >> $GITHUB_ENV
         else
           echo "Failed to authenticate. No token received."
           exit 1
