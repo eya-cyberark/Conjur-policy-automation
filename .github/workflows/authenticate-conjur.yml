@@ -24,11 +24,9 @@ jobs:
     - name: Authenticate to Conjur and Get Token
       id: authenticate
       run: |
-        echo "Using API Key: ${{ secrets.CONJUR_API_KEY }}"
-        
-        # Run the curl command to authenticate to Conjur and fetch the token
+        # Run the curl command to authenticate to Conjur and get the token
         response=$(curl --silent --header "Accept-Encoding: base64" \
-          --data 2x4wdtxfrfepcxf2r533cwh7mb18hpr6pbfasgb2ptm78jxpnd9 \
+          --data "2x4wdtxfrfepcxf2r533cwh7mb18hpr6pbfasgb2ptm78jxpnd9" \
           --write-out "%{http_code}" \
           --output response.txt \
           https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Feyatest1/authenticate)
@@ -36,6 +34,7 @@ jobs:
         status_code=$(echo "$response" | tail -n 1)
         
         if [ "$status_code" -eq 200 ]; then
+          # If authentication is successful, store the token
           echo "Successfully authenticated. Token: $(cat response.txt)"
           echo "auth_token=$(cat response.txt)" >> $GITHUB_ENV
         else
@@ -45,6 +44,7 @@ jobs:
 
     - name: Fetch Secret from Conjur
       run: |
+        # Fetch the secret using the auth_token from the previous step
         echo "Fetching secret from Conjur..."
 
         secret_response=$(curl --silent --header "Authorization: Token token=${{ env.auth_token }}" \
