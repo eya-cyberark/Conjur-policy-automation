@@ -1,3 +1,5 @@
+name: Authenticate and Fetch Secret from Conjur
+
 on:
   schedule:
     - cron: '*/7 * * * *'  # Runs every 7 minutes
