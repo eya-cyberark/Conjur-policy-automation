@@ -45,3 +45,12 @@ jobs:
       run: |
         echo "Successfully authenticated. Token: ${{ env.auth_token }}"
         echo "Done"
+
+    - name: Load Policy to Conjur
+      run: |
+        curl -v --request POST \
+          --url https://sme-andrew.secretsmgr.cyberark.cloud/api/policies/conjur/policy/data/app-secrets/test \
+          --header "Authorization: Token token=${{ env.auth_token }}" \
+          --header "Content-Type: text/plain" \
+          --data '- !variable
+                     id: testgithub'
