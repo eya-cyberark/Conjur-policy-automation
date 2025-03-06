@@ -41,21 +41,6 @@ jobs:
           exit 1
         fi
 
-    - name: Fetch Secret from Conjur
-      run: |
-        # Fetch the secret using the auth_token from the previous step
-        echo "Fetching secret from Conjur..."
-
-        secret_response=$(curl --silent --header "Authorization: Token token=${{ env.auth_token }}" \
-          https://sme-andrew.secretsmgr.cyberark.cloud/api/secrets/conjur/variable/data/vault/AAM_DEVOPS-DEMO/prediction/password)
-
-        if [ -n "$secret_response" ]; then
-          echo "Secret retrieved successfully: $secret_response"
-        else
-          echo "Failed to retrieve secret."
-          exit 1
-        fi
-
     - name: Display the Authentication Token
       run: |
         echo "Successfully authenticated. Token: ${{ env.auth_token }}"
