@@ -70,7 +70,7 @@ jobs:
 
         # Check if secret was successfully fetched
         if [ -n "$secret_response" ]; then
-          echo "Secret retrieved successfully: $secret_response"
+          echo "Secret retrieved successfully: $secret_response"  # Printing the secret (for testing purposes)
         else
           echo "Failed to retrieve secret."
           exit 1
