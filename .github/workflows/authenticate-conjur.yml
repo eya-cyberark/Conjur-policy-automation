@@ -21,13 +21,21 @@ jobs:
     - name: Authenticate to Conjur and Get Token
       id: authenticate
       run: |
-        # Run the curl command to authenticate with Conjur and get the token
-        auth_token=$(curl --header "Accept-Encoding: base64" \
+        # Run the curl command and print the full response
+        response=$(curl --header "Accept-Encoding: base64" \
           --data "${{ secrets.CONJUR_API_KEY }}" \
           https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Feyatest1/authenticate)
 
-        # Save the auth_token to an environment variable for later steps
-        echo "auth_token=$auth_token" >> $GITHUB_ENV
+        # Debugging: Print the response to see if we're getting the expected token
+        echo "Response: $response"
+
+        # Capture the token if the response is not empty
+        if [ -n "$response" ]; then
+          echo "auth_token=$response" >> $GITHUB_ENV
+        else
+          echo "Failed to authenticate. No token received."
+          exit 1
+        fi
 
     - name: Display the Authentication Token
       run: |
