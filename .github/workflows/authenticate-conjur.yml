@@ -1,9 +1,8 @@
-name: Authenticate to Conjur
+name: Refresh Conjur Authentication Token
 
 on:
-  push:
-    branches:
-      - main  # Trigger this workflow on pushes to the main branch
+  schedule:
+    - cron: '*/7 * * * *'  # Runs every 7 minutes
 
 jobs:
   authenticate:
@@ -23,24 +22,42 @@ jobs:
       run: |
         # Print the API Key (for debugging) to ensure it's being passed correctly (only for debugging, not recommended in production)
         echo "Using API Key: ${{ secrets.CONJUR_API_KEY }}"
-        
-        # Run the curl command with verbose output for debugging
+
+        # Run the curl command to authenticate to Conjur
         response=$(curl --silent --header "Accept-Encoding: base64" \
-          --data 3hyc3sp22ayr0y1qpxsn3237wvg3224bz153jr30fm22bd6p41cb9tx5 \
+          --data "${{ secrets.CONJUR_API_KEY }}" \
           --write-out "%{http_code}" \
           --output response.txt \
           https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Feyatest1/authenticate)
 
-        # Debugging: Print the response and HTTP status code
-        echo "Response: $(cat response.txt)"
-        echo "HTTP Status Code: $response"
-
-        # Check if token is received and save to environment variable
-        if [ -n "$(cat response.txt)" ]; then
+        # Check the response status code
+        status_code=$(echo "$response" | tail -n 1)
+        
+        if [ "$status_code" -eq 200 ]; then
+          # If the response code is 200, we got a valid token
+          echo "Successfully authenticated. Token: $(cat response.txt)"
           echo "auth_token=$(cat response.txt)" >> $GITHUB_ENV
         else
-          echo "Failed to authenticate. No token received."
-          exit 1
+          # If the response code is not 200, print an error message
+          echo "Token has expired or authentication failed. Attempting to get a new token..."
+          echo "Failed to authenticate. Status Code: $status_code"
+          
+          # Attempt to get a new token
+          new_response=$(curl --silent --header "Accept-Encoding: base64" \
+            --data 3hyc3sp22ayr0y1qpxsn3237wvg3224bz153jr30fm22bd6p41cb9tx5 \
+            --write-out "%{http_code}" \
+            --output new_response.txt \
+            https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Feyatest1/authenticate)
+
+          new_status_code=$(echo "$new_response" | tail -n 1)
+
+          if [ "$new_status_code" -eq 200 ]; then
+            echo "Successfully authenticated again. Token: $(cat new_response.txt)"
+            echo "auth_token=$(cat new_response.txt)" >> $GITHUB_ENV
+          else
+            echo "Failed to authenticate again. Status Code: $new_status_code"
+            exit 1
+          fi
         fi
 
     - name: Display the Authentication Token
