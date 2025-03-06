@@ -1,8 +1,12 @@
 name: Authenticate and Fetch Secret from Conjur
 
 on:
-  schedule:
-    - cron: '*/7 * * * *'  # Runs every 7 minutes
+  push:
+    branches:
+      - main  # Trigger on pushes to the main branch
+  pull_request:
+    branches:
+      - main  # Trigger on pull requests to the main branch
 
 jobs:
   authenticate_and_fetch_secret:
@@ -24,7 +28,7 @@ jobs:
         
         # Run the curl command to authenticate to Conjur and fetch the token
         response=$(curl --silent --header "Accept-Encoding: base64" \
-          --data "${{ secrets.CONJUR_API_KEY }}" \
+          --data 2x4wdtxfrfepcxf2r533cwh7mb18hpr6pbfasgb2ptm78jxpnd9 \
           --write-out "%{http_code}" \
           --output response.txt \
           https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Feyatest1/authenticate)
