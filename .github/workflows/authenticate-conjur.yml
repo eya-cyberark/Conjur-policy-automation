@@ -1,11 +1,11 @@
-name: Refresh Conjur Authentication Token
+name: Refresh Conjur Authentication Token and Fetch Secret
 
 on:
   schedule:
     - cron: '*/7 * * * *'  # Runs every 7 minutes
 
 jobs:
-  authenticate:
+  authenticate_and_fetch_secret:
     runs-on: ubuntu-latest  # Use Ubuntu runner
 
     steps:
@@ -22,8 +22,8 @@ jobs:
       run: |
         # Print the API Key (for debugging) to ensure it's being passed correctly (only for debugging, not recommended in production)
         echo "Using API Key: ${{ secrets.CONJUR_API_KEY }}"
-
-        # Run the curl command to authenticate to Conjur
+        
+        # Run the curl command to authenticate to Conjur and fetch the token
         response=$(curl --silent --header "Accept-Encoding: base64" \
           --data "${{ secrets.CONJUR_API_KEY }}" \
           --write-out "%{http_code}" \
@@ -58,6 +58,22 @@ jobs:
             echo "Failed to authenticate again. Status Code: $new_status_code"
             exit 1
           fi
+        fi
+
+    - name: Fetch Secret from Conjur
+      run: |
+        # Fetch the secret using the auth_token from the previous step
+        echo "Fetching secret from Conjur..."
+
+        secret_response=$(curl --silent --header "Authorization: Token token=${{ env.auth_token }}" \
+          https://sme-andrew.secretsmgr.cyberark.cloud/api/secrets/conjur/variable/data/vault/AAM_DEVOPS-DEMO/prediction/password)
+
+        # Check if secret was successfully fetched
+        if [ -n "$secret_response" ]; then
+          echo "Secret retrieved successfully: $secret_response"
+        else
+          echo "Failed to retrieve secret."
+          exit 1
         fi
 
     - name: Display the Authentication Token
