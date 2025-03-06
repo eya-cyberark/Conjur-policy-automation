@@ -26,7 +26,7 @@ jobs:
         
         # Run the curl command with verbose output for debugging
         response=$(curl --silent --header "Accept-Encoding: base64" \
-          --data "${{ secrets.CONJUR_API_KEY }}" \
+          --data 3hyc3sp22ayr0y1qpxsn3237wvg3224bz153jr30fm22bd6p41cb9tx5 \
           --write-out "%{http_code}" \
           --output response.txt \
           https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Feyatest1/authenticate)
