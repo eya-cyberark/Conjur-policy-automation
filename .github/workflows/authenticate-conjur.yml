@@ -51,7 +51,7 @@ jobs:
         # Use the auth_token to load policy into Conjur
         curl -v --request POST \
           --url https://sme-andrew.secretsmgr.cyberark.cloud/api/policies/conjur/policy/data/app-secrets/test \
-          --header "Authorization: Token token=${{ env.auth_token }}" \
+          --header "Authorization: Token token=eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSmpiMjVxZFhJdWIzSm5MM05zYjNOcGJHOHZkaklpTENKcmFXUWlPaUl6Wm1NNE1qYzJabUkyWWpZNE1HUXpZMlV6WkdJM05XSXdabVkzWW1RME5qWmlZMlUwTlRRMlpHWTFaRGN6TTJaaVptTTRPRGN5WXpnMVlqYzNZamRrSW4wPSIsInBheWxvYWQiOiJleUpwWVhRaU9qRTNOREV6TURNME9UTXNJbk4xWWlJNkltaHZjM1F2WkdGMFlTOWxlV0YwWlhOME1TSXNJbVY0Y0NJNk1UYzBNVE13TXprM015d2lkR2xrSWpvaVpESXpOMlptTVdVdFpXVXpaUzAwTURRNExXRXpNV1V0T0RFeE1EZ3dObU14WWpkakluMD0iLCJzaWduYXR1cmUiOiJ0bU9McEF4d2xTYU9SbG9CaFZtMVVHSzBMR0hEelJzeUJYRkhDdldWRThnUGhVVFFqSzFfR2tXMmZBVld1RmdCb2tFV05GTlVodnRwNTBON1Zpa2F3emIxdUpxREFHZUlERkVNN0t0OWNMTWl6M1JIUEVtNzJfZjZNb0lyV3l3NnV5LS1KQXIwQk9QYnBiWmtSWTlGRzViM05oN0E3cWpYOE1HTEx1MmUxblZ6dXBIU0Rsa1ZzUmVsT1FqMjI3THVTUG1mM1lMTnRUNGpZQl9kVEpiSXNBN1pWZFZuejlNc1kzTXFkUlp6Q1A2QXctai1uX0o2anJOVDAxdExjTEZ4NjR1cmpZY25FenR2cUdxQ3hEUU8yVWY5SHI0NVM5enZkS2QzNnBtYXUtRGN5ZHNXcnNJWTRka2RHZ2U1X0IwaDhBRmtrbTV3Q1hrU1FEWWJ4VlMtZFE3QlBibXMwN0VsVlNPZE5jN2RkRmp2YUpiMVJYNHlHY19jdTVfNlc2QXEifQ==" \
           --header "Content-Type: text/plain" \
           --data '- !variable
                    id: testGitHub'
