@@ -51,4 +51,5 @@ jobs:
         git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA}
         files=$(git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA})
         echo $files
+        echo $GITHUB_SHA
 
