@@ -51,9 +51,23 @@ jobs:
           
     - name: Load Policy to Conjur
       run: |
-        git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA}
         files=$(git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA})
-        echo $files
-        echo $GITHUB_SHA
-        git -v
-        pwd
+        for file in $files
+           # Start
+           do
+             # TODO:
+             # Add logic for handling policy
+              if [[ "$file" == "*/workflows/*.yml" ]]; then
+                echo "Skipping pipeline file."
+              
+              # Test for file existing at the path provided by git diff-tree
+              elif [ -f "$file" ]; then
+                # Create
+                if [[ "$file" == *github/*01_*.yml ]]; then
+                  echo "Github 01 file found; Creating Github Host"
+                  echo "$file"
+                  cat $file
+                fi
+              fi
+           done
+        
