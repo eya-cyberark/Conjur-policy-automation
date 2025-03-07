@@ -53,4 +53,4 @@ jobs:
                 --url https://sme-andrew.secretsmgr.cyberark.cloud/api/policies/conjur/policy/data/app-secrets/test \
                 --header "Authorization: Token token=\"${{ env.auth_token }}\"" \
                 --header "Content-Type: text/plain" \
-                --data @.github/workflows/conjur-policy.yml 
+                --data "$(cat conjur-policy.yml)"
