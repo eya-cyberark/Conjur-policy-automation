@@ -14,12 +14,13 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2  # Checkout code
+      uses: actions/checkout@v4  # Checkout code
 
     - name: Install curl
       run: |
         sudo apt-get update
-        sudo apt-get install -y curl  # Install curl for API calls
+        sudo apt-get install -y curl git  # Install curl for API calls
+        
 
     - name: Authenticate to Conjur and Get Token
       id: authenticate
