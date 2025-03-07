@@ -1,0 +1,3 @@
+- !variable
+  id: db-password
+  kind: password
