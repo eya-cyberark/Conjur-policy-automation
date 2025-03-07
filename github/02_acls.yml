@@ -1,0 +1,4 @@
+- !permit
+  role: !host app123_java
+  privileges: [ read, execute ]
+  resource: !variable data/app-secrets/test/db-password
