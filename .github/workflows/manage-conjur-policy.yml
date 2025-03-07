@@ -73,4 +73,5 @@ jobs:
                     --header "Content-Type: text/plain" \
                     --data "$(cat $file)"
                 fi
+              fi
            done
