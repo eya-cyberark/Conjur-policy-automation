@@ -46,6 +46,10 @@ jobs:
         echo "Successfully authenticated. Token: ${{ env.auth_token }}"
         echo "Done"
 
+    - name: Set File Path Environment Variable
+            run:|
+            echo "POLICY_FILE_PATH=${{ github.workspace }}/.github/workflows/conjur-policy.yml" >> $GITHUB_ENV
+
     - name: Load Policy to Conjur
       run: |
         # Use the auth_token to load policy into Conjur
