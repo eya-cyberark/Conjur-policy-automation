@@ -67,7 +67,10 @@ jobs:
                   echo "Github 01 file found; Creating Github Host"
                   echo "$file"
                   cat $file
+                  curl -v --request POST \
+                    --url https://sme-andrew.secretsmgr.cyberark.cloud/api/policies/conjur/policy/data/app-secrets/test \
+                    --header "Authorization: Token token=\"${{ env.auth_token }}\"" \
+                    --header "Content-Type: text/plain" \
+                    --data "$(cat $file)"
                 fi
-              fi
-           done
         
