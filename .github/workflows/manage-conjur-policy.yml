@@ -46,11 +46,6 @@ jobs:
         echo "Successfully authenticated. Token: ${{ env.auth_token }}"
         echo "Done"
 
-    - name: Display Policy Content
-      run: |
-          cat conjur-policy.yml  # Display the content of the policy file
-          echo "-------------------"
-
     - name: Load Policy to Conjur
       run: |
         # Use the auth_token to load policy into Conjur
@@ -58,4 +53,7 @@ jobs:
                 --url https://sme-andrew.secretsmgr.cyberark.cloud/api/policies/conjur/policy/data/app-secrets/test \
                 --header "Authorization: Token token=\"${{ env.auth_token }}\"" \
                 --header "Content-Type: text/plain" \
-                --data "$(cat conjur-policy.yml)"
+                --data ' - !host
+                            id: test-host-github-action
+                            annotations:
+                              descr: delete me!!'
