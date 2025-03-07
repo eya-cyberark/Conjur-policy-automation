@@ -49,11 +49,5 @@ jobs:
     - name: Load Policy to Conjur
       run: |
         files=$(git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA})
-        printenv
         echo $files
-        # Use the auth_token to load policy into Conjur
-            curl -v --request POST \
-                --url https://sme-andrew.secretsmgr.cyberark.cloud/api/policies/conjur/policy/data/app-secrets/test \
-                --header "Authorization: Token token=\"${{ env.auth_token }}\"" \
-                --header "Content-Type: text/plain" \
-                --data "@${{ env.POLICY_FILE_PATH }}"
+
