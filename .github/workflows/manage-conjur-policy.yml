@@ -48,6 +48,7 @@ jobs:
           
     - name: Load Policy to Conjur
       run: |
-        files=$(git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA})
+        git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA}
+        files=$(git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA}
         echo $files
 
