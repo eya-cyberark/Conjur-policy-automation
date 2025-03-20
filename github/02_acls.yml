@@ -1,4 +1,4 @@
 - !permit
   role: !host app124_java
   privileges: [ read, execute ]
-  resource: !variable data/app-secrets/test/db-password
+  resource: !variable data/app-secrets/test/GitHub-Test
