@@ -39,17 +39,23 @@ Organize your policy files by either application or policy branch:
 
 - **By Application**:
 
-root ├── APP1234 │ ├── 01_host.yml │ └── 02_acls.yml
+```
+root
+  |- APP1234
+    |- 01_host.yml
+    |- 02_acls.yml
+```
 
 
 - **By Policy Branch**:
 
-root 
-├── apps
-│ └── 01_app1234.yml 
-├── acls 
-│ └── 02_app1234.yml
-
+```
+root
+  |- apps
+    |- 01_app1234.yml
+  |- acls
+    |- 02_app1234.yml 
+```
 
 #### File Naming Conventions
 
