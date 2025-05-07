@@ -22,8 +22,31 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y curl git  # Install curl for API calls
+
+
+
+    #############################################
+    # 🔐 JWT Auth: Request GitHub OIDC Token
+    #############################################
+    - name: Request GitHub OIDC JWT
+      id: jwt
+      run: |
+        echo "Requesting GitHub OIDC token..."
+        token_response=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+          "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=conjur")
+
+        jwt_token=$(echo "$token_response" | jq -r '.value')
+        if [ "$jwt_token" = "null" ] || [ -z "$jwt_token" ]; then
+          echo "Failed to retrieve JWT token from GitHub OIDC"
+          exit 1
+        fi
+
+        echo "jwt_token=$jwt_token" >> $GITHUB_OUTPUT     
         
 
+    ########################################################
+    # 🧪 Use Conjur Token (either from API Key or JWT)
+    ########################################################
     - name: Authenticate to Conjur and Get Token
       id: authenticate
       run: |
