@@ -1,39 +1,77 @@
-name: Test GitHub OIDC Token
+name: Authenticate and Fetch Secret from Conjur
 
 on:
-  workflow_dispatch:  # Allows you to run this manually from the Actions tab
-
-permissions:
-  id-token: write
-  contents: read
+  push:
+    branches:
+      - main  # Trigger on pushes to the main branch
+  pull_request:
+    branches:
+      - main  # Trigger on pull requests to the main branch
 
 jobs:
-  get-jwt-token:
-    runs-on: ubuntu-latest
+  authenticate_and_fetch_secret:
+    runs-on: ubuntu-latest  # Use Ubuntu runner
+
     steps:
-      - name: Print environment variables
-        run: |
-          echo "Request URL: $ACTIONS_ID_TOKEN_REQUEST_URL"
-          echo "Request Token: $ACTIONS_ID_TOKEN_REQUEST_TOKEN"
+    - name: Checkout repository
+      uses: actions/checkout@v4  # Checkout code
+      with:
+        fetch-depth: 10
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
+    - name: Install curl
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl git  # Install curl for API calls
+        
 
-      - name: Request OIDC token from GitHub
-        run: |
-          echo "Requesting GitHub OIDC token..."
-          token_response=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}?audience=conjur")
+    - name: Authenticate to Conjur and Get Token
+      id: authenticate
+      run: |
+        # Run the curl command to authenticate to Conjur and get the token
+        response=$(curl --header "Accept-Encoding: base64" --data ${{ secrets.CONJUR_API_KEY }}\
+          --write-out "%{http_code}" \
+          --output response.txt \
+          https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Fapp-secrets%2Feyatest1/authenticate)
 
-          echo "Raw response from GitHub OIDC:"
-          echo "$token_response"
+        status_code=$(echo "$response" | tail -n 1)
+        
+        if [ "$status_code" -eq 200 ]; then
+          # If authentication is successful, store the token
+          echo "Successfully authenticated. Token: $(cat response.txt)"
+          echo "auth_token=$(cat response.txt)" >> $GITHUB_ENV
+        else
+          echo "Token has expired or authentication failed. Status Code: $status_code"
+          exit 1
+        fi
 
-          jwt_token=$(echo "$token_response" | jq -r '.value')
-
-          if [ "$jwt_token" = "null" ] || [ -z "$jwt_token" ]; then
-            echo "❌ Failed to retrieve JWT token from GitHub OIDC"
-            exit 1
-          fi
-
-          echo "✅ Successfully retrieved JWT token:"
-          echo "$jwt_token"
+    - name: Display the Authentication Token
+      run: |
+        echo "Successfully authenticated. Token: ${{ env.auth_token }}"
+        echo "Done"
+          
+    - name: Load Policy to Conjur
+      run: |
+        files=$(git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA})
+        for file in $files
+           # Start
+           do
+             # TODO:
+             # Add logic for handling policy
+              if [[ "$file" == "*/workflows/*.yml" ]]; then
+                echo "Skipping pipeline file."
+              
+              # Test for file existing at the path provided by git diff-tree
+              elif [ -f "$file" ]; then
+                # Create
+                if [[ "$file" == *github/*01_*.yml ]]; then
+                  echo "Github 01 file found; Creating Github Host"
+                  echo "$file"
+                  cat $file
+                  curl -v --request POST \
+                    --url https://sme-andrew.secretsmgr.cyberark.cloud/api/policies/conjur/policy/data/app-secrets/test \
+                    --header "Authorization: Token token=\"${{ env.auth_token }}\"" \
+                    --header "Content-Type: text/plain" \
+                    --data "$(cat $file)"
+                fi
+              fi
+           done
