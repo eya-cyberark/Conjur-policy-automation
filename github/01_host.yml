@@ -1,6 +1,2 @@
 - !host
-  id: app125_java
-
-
-  - !host
   id: app126_java
