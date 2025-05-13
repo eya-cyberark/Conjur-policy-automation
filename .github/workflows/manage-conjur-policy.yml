@@ -31,7 +31,7 @@ jobs:
         response=$(curl --header "Accept-Encoding: base64" --data ${{ secrets.CONJUR_API_KEY }}\
           --write-out "%{http_code}" \
           --output response.txt \
-          https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Fapp-secrets%2Feyatest1/authenticate)
+          https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Fapp-secrets%2FGitHubActionHost/authenticate)
 
         status_code=$(echo "$response" | tail -n 1)
         
