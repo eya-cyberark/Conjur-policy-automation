@@ -68,11 +68,6 @@ jobs:
                   echo "$file"
                   cat $file
                   
-                if [[ "$file" == *github/*02_*.yml ]]; then
-                  echo "Github 02 file found; Creating Github Host"
-                  echo "$file"
-                  cat $file
-                  
                   curl -v --request POST \
                     --url https://sme-andrew.secretsmgr.cyberark.cloud/api/policies/conjur/policy/data/githubTest \
                     --header "Authorization: Token token=\"${{ env.auth_token }}\"" \
