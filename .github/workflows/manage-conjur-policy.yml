@@ -3,76 +3,84 @@ name: Authenticate and Fetch Secret from Conjur
 on:
   push:
     branches:
-      - main  # Trigger on pushes to the main branch
+      - main
   pull_request:
     branches:
-      - main  # Trigger on pull requests to the main branch
+      - main
 
 jobs:
   authenticate_and_fetch_secret:
-    runs-on: ubuntu-latest  # Use Ubuntu runner
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4  # Checkout code
-      with:
-        fetch-depth: 10
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
 
-    - name: Install curl
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y curl git  # Install curl for API calls
-        
+      - name: Install curl
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl git
 
-    - name: Authenticate to Conjur and Get Token
-      id: authenticate
-      run: |
-        # Run the curl command to authenticate to Conjur and get the token
-        response=$(curl --header "Accept-Encoding: base64" --data ${{ secrets.CONJUR_API_KEY }}\
-          --write-out "%{http_code}" \
-          --output response.txt \
-          https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Fapp-secrets%2FGitHubActionHost/authenticate)
+      - name: Authenticate to Conjur and Get Token
+        id: authenticate
+        run: |
+          response=$(curl --header "Accept-Encoding: base64" --data ${{ secrets.CONJUR_API_KEY }} \
+            --write-out "%{http_code}" \
+            --output response.txt \
+            https://sme-andrew.secretsmgr.cyberark.cloud/api/authn/conjur/host%2Fdata%2Fapp-secrets%2FGitHubActionHost/authenticate)
 
-        status_code=$(echo "$response" | tail -n 1)
-        
-        if [ "$status_code" -eq 200 ]; then
-          # If authentication is successful, store the token
-          echo "Successfully authenticated. Token: $(cat response.txt)"
-          echo "auth_token=$(cat response.txt)" >> $GITHUB_ENV
-        else
-          echo "Token has expired or authentication failed. Status Code: $status_code"
-          exit 1
-        fi
+          status_code=$(echo "$response" | tail -n 1)
 
-    - name: Display the Authentication Token
-      run: |
-        echo "Successfully authenticated. Token: ${{ env.auth_token }}"
-        echo "Done"
-          
-    - name: Load Policy to Conjur
-      run: |
-        files=$(git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA})
-        for file in $files
-           # Start
-           do
-             # TODO:
-             # Add logic for handling policy
-              if [[ "$file" == "*/workflows/*.yml" ]]; then
-                echo "Skipping pipeline file."
-              
-              # Test for file existing at the path provided by git diff-tree
-              elif [ -f "$file" ]; then
-                # Create
-                if [[ "$file" == *github/*01_*.yml ]]; then
-                  echo "Github 01 file found; Creating Github Host"
-                  echo "$file"
-                  cat $file
-                  
-                  curl -v --request POST \
-                    --url https://sme-andrew.secretsmgr.cyberark.cloud/api/policies/conjur/policy/data/githubTest \
-                    --header "Authorization: Token token=\"${{ env.auth_token }}\"" \
-                    --header "Content-Type: text/plain" \
-                    --data "$(cat $file)"
-                fi
+          if [ "$status_code" -eq 200 ]; then
+            echo "Successfully authenticated. Token: $(cat response.txt)"
+            echo "auth_token=$(cat response.txt)" >> $GITHUB_ENV
+          else
+            echo "Token has expired or authentication failed. Status Code: $status_code"
+            exit 1
+          fi
+
+      - name: Display the Authentication Token
+        run: |
+          echo "Successfully authenticated. Token: ${{ env.auth_token }}"
+          echo "Done"
+
+      - name: Load Policy to Conjur
+        run: |
+          files=$(git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA})
+
+          found_01=false
+          found_02=false
+
+          for file in $files; do
+            if [[ "$file" == *workflows/*.yml ]]; then
+              echo "Skipping workflow file: $file"
+              continue
+            fi
+
+            if [[ -f "$file" ]]; then
+              if [[ "$file" == *github/*01_*.yml ]]; then
+                found_01=true
               fi
-           done
+              if [[ "$file" == *github/*02_*.yml ]]; then
+                found_02=true
+              fi
+
+              if [[ "$file" == *github/*01_*.yml || "$file" == *github/*02_*.yml ]]; then
+                echo "Matched policy file: $file"
+                cat "$file"
+
+                curl -v --request POST \
+                  --url https://sme-andrew.secretsmgr.cyberark.cloud/api/policies/conjur/policy/data/githubTest \
+                  --header "Authorization: Token token=\"${{ env.auth_token }}\"" \
+                  --header "Content-Type: text/plain" \
+                  --data-binary @"$file"
+              fi
+            fi
+          done
+
+          if [[ "$found_01" == true && "$found_02" == true ]]; then
+            echo "✅ Both 01 and 02 files changed in this commit!"
+            # Optional additional logic here
+          fi
