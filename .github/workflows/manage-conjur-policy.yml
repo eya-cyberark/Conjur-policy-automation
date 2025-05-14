@@ -18,10 +18,36 @@ jobs:
         with:
           fetch-depth: 10
 
-      - name: Install curl
+      - name: Install curl and git
         run: |
           sudo apt-get update
           sudo apt-get install -y curl git
+
+      - name: Install GitHub CLI
+        if: github.event_name == 'pull_request'
+        run: |
+          sudo apt-get install -y gh
+
+      - name: Check PR Approval Status
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "🔍 Checking if PR #${{ github.event.pull_request.number }} is approved..."
+          gh pr view ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --json reviewDecision \
+            -q '.reviewDecision' > decision.txt
+
+          status=$(cat decision.txt)
+          echo "PR review status: $status"
+
+          if [[ "$status" != "APPROVED" ]]; then
+            echo "❌ PR not approved. Skipping policy application."
+            exit 1
+          else
+            echo "✅ PR approved. Continuing workflow."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Authenticate to Conjur and Get Token
         id: authenticate
@@ -82,5 +108,5 @@ jobs:
 
           if [[ "$found_01" == true && "$found_02" == true ]]; then
             echo "✅ Both 01 and 02 files changed in this commit!"
-            # Optional additional logic here
+            # Optional: add logic for joint validation or triggering alerts
           fi
