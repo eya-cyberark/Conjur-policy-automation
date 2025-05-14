@@ -1,39 +1,15 @@
-name: Authenticate and Load Policy from Conjur
+name: Authenticate and Fetch Secret from Conjur
 
 on:
   push:
     branches:
-      - main            # Trigger after PR is merged to main
+      - main
   pull_request:
-    types: [opened, synchronize, reopened]  # For approval checks
     branches:
       - main
 
 jobs:
-  check_pr_approval:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    outputs:
-      approved: ${{ steps.check.outputs.approved }}
-
-    steps:
-      - name: Check if PR is approved
-        id: check
-        run: |
-          echo "🔍 Checking if PR #${{ github.event.pull_request.number }} is approved..."
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          approvals=$(gh pr view $PR_NUMBER --json reviews -q '.reviews | map(select(.state == "APPROVED")) | length')
-          echo "Approvals: $approvals"
-          if [[ "$approvals" -ge 1 ]]; then
-            echo "approved=true" >> $GITHUB_OUTPUT
-          else
-            echo "approved=false" >> $GITHUB_OUTPUT
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   authenticate_and_fetch_secret:
-    needs: [check_pr_approval]
-    if: github.event_name == 'push' || needs.check_pr_approval.outputs.approved == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -42,7 +18,7 @@ jobs:
         with:
           fetch-depth: 10
 
-      - name: Install curl and git
+      - name: Install curl
         run: |
           sudo apt-get update
           sudo apt-get install -y curl git
@@ -58,16 +34,20 @@ jobs:
           status_code=$(echo "$response" | tail -n 1)
 
           if [ "$status_code" -eq 200 ]; then
-            echo "✅ Successfully authenticated."
+            echo "Successfully authenticated. Token: $(cat response.txt)"
             echo "auth_token=$(cat response.txt)" >> $GITHUB_ENV
           else
-            echo "❌ Authentication failed. Status Code: $status_code"
+            echo "Token has expired or authentication failed. Status Code: $status_code"
             exit 1
           fi
 
+      - name: Display the Authentication Token
+        run: |
+          echo "Successfully authenticated. Token: ${{ env.auth_token }}"
+          echo "Done"
+
       - name: Load Policy to Conjur
         run: |
-          echo "🔍 Checking for changed policy files..."
           files=$(git diff-tree --no-commit-id --name-only -r ${GITHUB_SHA})
 
           found_01=false
@@ -75,7 +55,7 @@ jobs:
 
           for file in $files; do
             if [[ "$file" == *workflows/*.yml ]]; then
-              echo "⚙️ Skipping workflow file: $file"
+              echo "Skipping workflow file: $file"
               continue
             fi
 
@@ -88,8 +68,10 @@ jobs:
               fi
 
               if [[ "$file" == *github/*01_*.yml || "$file" == *github/*02_*.yml ]]; then
-                echo "📄 Applying policy file: $file"
-                curl -s -o /dev/null -w "%{http_code}" --request POST \
+                echo "Matched policy file: $file"
+                cat "$file"
+
+                curl -v --request POST \
                   --url https://sme-andrew.secretsmgr.cyberark.cloud/api/policies/conjur/policy/data/githubTest \
                   --header "Authorization: Token token=\"${{ env.auth_token }}\"" \
                   --header "Content-Type: text/plain" \
@@ -99,5 +81,6 @@ jobs:
           done
 
           if [[ "$found_01" == true && "$found_02" == true ]]; then
-            echo "✅ Both 01 and 02 policy types detected and processed."
+            echo "✅ Both 01 and 02 files changed in this commit!"
+            # Optional additional logic here
           fi
